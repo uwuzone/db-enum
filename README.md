@@ -24,23 +24,9 @@ db-enum is a security-focused database enumeration tool designed for penetration
 
 ## Installation
 
-1. Clone the repository:
-
-   ```
-   git clone https://github.com/yourusername/db-enum.git
-   cd db-enum
-   ```
-
-2. Install PDM if you haven't already:
-
-   ```
-   pip install pdm
-   ```
-
-3. Install the project dependencies:
-   ```
-   pdm install
-   ```
+```
+pip install -U git+https://github.com/uwuzone/db-enum.git
+```
 
 ## Usage
 
