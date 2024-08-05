@@ -1,0 +1,37 @@
+[project]
+name = "db-enum"
+version = "0.1.0"
+description = "DB fingerprinting and information gathering tool (NOISY!)"
+authors = [
+    {name = "renthog", email = "58467174+renthog@users.noreply.github.com"},
+]
+dependencies = [
+    "click>=8.1.7",
+    "pymysql>=1.1.1",
+    "psycopg2-binary>=2.9.9",
+    "pymssql>=2.3.0",
+    "pymongo>=4.8.0",
+    "redis>=5.0.8",
+    "elasticsearch>=8.14.0",
+    "cassandra-driver>=3.29.1",
+    "neo4j>=5.23.1",
+    "couchdb>=1.2",
+    "influxdb>=5.3.2",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[project.scripts]
+db-enum = "db_enum.cli:cli"
+
+[tool.pdm.scripts]
+db-enum = "python -m db_enum.cli"

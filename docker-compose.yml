@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:latest
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
+    ports:
+      - '3306:3306'
+
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: testdb
+    ports:
+      - '5432:5432'
+
+  mssql:
+    image: mcr.microsoft.com/azure-sql-edge
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: 'YourStrong!Passw0rd'
+    ports:
+      - '1433:1433'
+
+  mongodb:
+    image: mongo:latest
+    platform: linux/amd64
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - '27017:27017'
+
+  redis:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+
+  elasticsearch:
+    image: elasticsearch:7.17.23
+    environment:
+      - discovery.type=single-node
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    ports:
+      - '9200:9200'
+
+  cassandra:
+    image: cassandra:5
+    platform: linux/amd64
+    ports:
+      - '9042:9042'
+
+  neo4j:
+    image: neo4j:4.4-community
+    platform: linux/amd64
+    environment:
+      NEO4J_AUTH: neo4j/testpassword
+    ports:
+      - '7687:7687'
+
+  couchdb:
+    image: couchdb:3
+    platform: linux/amd64
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: password
+    ports:
+      - '5984:5984'
+
+  influxdb:
+    image: influxdb:1.8-alpine
+    platform: linux/amd64
+    environment:
+      INFLUXDB_DB: testdb
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: password
+    ports:
+      - '8086:8086'
