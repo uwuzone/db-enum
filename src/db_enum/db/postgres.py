@@ -48,60 +48,53 @@ class PostgresEnum(DBInterface):
         database: str,
         logger: VerboseLogger,
     ) -> Dict[str, Any]:
-        try:
-            conn = psycopg2.connect(
-                host=host,
-                port=port,
-                user=user,
-                password=password,
-                dbname=database or "postgres",
-            )
-            cursor = conn.cursor(cursor_factory=DictCursor)
+        conn = psycopg2.connect(
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            dbname=database or "postgres",
+        )
+        cursor = conn.cursor(cursor_factory=DictCursor)
 
-            result = {
-                "type": "PostgreSQL",
-                "kind": "sql",
-                "version": None,
-                "databases": [],
-                "tables": [],
-            }
+        result = {
+            "type": "PostgreSQL",
+            "kind": "sql",
+            "version": None,
+            "databases": [],
+            "tables": [],
+        }
 
-            logger.info("Retrieving PostgreSQL version...")
-            cursor.execute("SELECT version()")
-            result["version"] = cursor.fetchone()[0]
+        logger.info("Retrieving PostgreSQL version...")
+        cursor.execute("SELECT version()")
+        result["version"] = cursor.fetchone()[0]
 
-            logger.info("Retrieving database list...")
-            cursor.execute(
-                "SELECT datname FROM pg_database WHERE datistemplate = false"
-            )
-            result["databases"] = [row[0] for row in cursor.fetchall()]
+        logger.info("Retrieving database list...")
+        cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false")
+        result["databases"] = [row[0] for row in cursor.fetchall()]
 
-            logger.info("Retrieving table information...")
-            cursor.execute(
-                """
-                SELECT schemaname, tablename, n_live_tup, pg_total_relation_size('"' || schemaname || '"."' || tablename || '"') as total_bytes
-                FROM pg_stat_user_tables
+        logger.info("Retrieving table information...")
+        cursor.execute(
             """
+            SELECT schemaname, tablename, n_live_tup, pg_total_relation_size('"' || schemaname || '"."' || tablename || '"') as total_bytes
+            FROM pg_stat_user_tables
+        """
+        )
+        for row in cursor.fetchall():
+            result["tables"].append(
+                {
+                    "schema": row["schemaname"],
+                    "name": row["tablename"],
+                    "approx_rows": row["n_live_tup"],
+                    "size_bytes": row["total_bytes"],
+                }
             )
-            for row in cursor.fetchall():
-                result["tables"].append(
-                    {
-                        "schema": row["schemaname"],
-                        "name": row["tablename"],
-                        "approx_rows": row["n_live_tup"],
-                        "size_bytes": row["total_bytes"],
-                    }
-                )
 
-            cursor.close()
-            conn.close()
+        cursor.close()
+        conn.close()
 
-            logger.info("PostgreSQL enumeration completed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error enumerating PostgreSQL: {str(e)}")
-            return {"error": str(e)}
+        logger.info("PostgreSQL enumeration completed successfully")
+        return result
 
 
 check_connection = PostgresEnum.check_connection

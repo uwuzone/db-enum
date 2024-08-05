@@ -42,54 +42,49 @@ class MySQLEnum(DBInterface):
         database: str,
         logger: VerboseLogger,
     ) -> Dict[str, Any]:
-        try:
-            conn = pymysql.connect(
-                host=host, port=port, user=user, password=password, database=database
-            )
-            cursor = conn.cursor()
+        conn = pymysql.connect(
+            host=host, port=port, user=user, password=password, database=database
+        )
+        cursor = conn.cursor()
 
-            result = {
-                "type": "MySQL",
-                "kind": "sql",
-                "version": None,
-                "databases": [],
-                "tables": [],
-            }
+        result = {
+            "type": "MySQL",
+            "kind": "sql",
+            "version": None,
+            "databases": [],
+            "tables": [],
+        }
 
-            logger.info("Retrieving MySQL version...")
-            cursor.execute("SELECT VERSION()")
-            result["version"] = cursor.fetchone()[0]
+        logger.info("Retrieving MySQL version...")
+        cursor.execute("SELECT VERSION()")
+        result["version"] = cursor.fetchone()[0]
 
-            logger.info("Retrieving database list...")
-            cursor.execute("SHOW DATABASES")
-            result["databases"] = [row[0] for row in cursor.fetchall()]
+        logger.info("Retrieving database list...")
+        cursor.execute("SHOW DATABASES")
+        result["databases"] = [row[0] for row in cursor.fetchall()]
 
-            logger.info("Retrieving table information...")
-            cursor.execute(
-                """
-                SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_ROWS, DATA_LENGTH 
-                FROM INFORMATION_SCHEMA.TABLES
+        logger.info("Retrieving table information...")
+        cursor.execute(
             """
+            SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_ROWS, DATA_LENGTH 
+            FROM INFORMATION_SCHEMA.TABLES
+        """
+        )
+        for row in cursor.fetchall():
+            result["tables"].append(
+                {
+                    "schema": row[0],
+                    "name": row[1],
+                    "approx_rows": row[2],
+                    "size_bytes": row[3],
+                }
             )
-            for row in cursor.fetchall():
-                result["tables"].append(
-                    {
-                        "schema": row[0],
-                        "name": row[1],
-                        "approx_rows": row[2],
-                        "size_bytes": row[3],
-                    }
-                )
 
-            cursor.close()
-            conn.close()
+        cursor.close()
+        conn.close()
 
-            logger.info("MySQL enumeration completed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error enumerating MySQL: {str(e)}")
-            return {"error": str(e)}
+        logger.info("MySQL enumeration completed successfully")
+        return result
 
 
 check_connection = MySQLEnum.check_connection

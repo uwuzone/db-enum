@@ -45,47 +45,42 @@ class InfluxDBEnum(DBInterface):
         database: str,
         logger: VerboseLogger,
     ) -> Dict[str, Any]:
-        try:
-            client = InfluxDBClient(
-                host=host,
-                port=port,
-                username=user,
-                password=password,
-                database=database,
-            )
+        client = InfluxDBClient(
+            host=host,
+            port=port,
+            username=user,
+            password=password,
+            database=database,
+        )
 
-            result = {
-                "type": "InfluxDB",
-                "kind": "time-series",
-                "version": None,
-                "databases": [],
-                "measurements": [],
-            }
+        result = {
+            "type": "InfluxDB",
+            "kind": "time-series",
+            "version": None,
+            "databases": [],
+            "measurements": [],
+        }
 
-            logger.info("Retrieving InfluxDB version...")
-            version = client.request("ping", expected_response_code=204).headers.get(
-                "X-Influxdb-Version"
-            )
-            result["version"] = version
+        logger.info("Retrieving InfluxDB version...")
+        version = client.request("ping", expected_response_code=204).headers.get(
+            "X-Influxdb-Version"
+        )
+        result["version"] = version
 
-            logger.info("Retrieving database list...")
-            result["databases"] = client.get_list_database()
+        logger.info("Retrieving database list...")
+        result["databases"] = client.get_list_database()
 
-            logger.info("Retrieving measurements for each database...")
-            for db in result["databases"]:
-                client.switch_database(db["name"])
-                measurements = client.get_list_measurements()
-                for measurement in measurements:
-                    result["measurements"].append(
-                        {"database": db["name"], "name": measurement["name"]}
-                    )
+        logger.info("Retrieving measurements for each database...")
+        for db in result["databases"]:
+            client.switch_database(db["name"])
+            measurements = client.get_list_measurements()
+            for measurement in measurements:
+                result["measurements"].append(
+                    {"database": db["name"], "name": measurement["name"]}
+                )
 
-            logger.info("InfluxDB enumeration completed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error enumerating InfluxDB: {str(e)}")
-            return {"error": str(e)}
+        logger.info("InfluxDB enumeration completed successfully")
+        return result
 
 
 check_connection = InfluxDBEnum.check_connection

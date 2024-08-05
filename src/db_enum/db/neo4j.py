@@ -42,47 +42,42 @@ class Neo4jEnum(DBInterface):
         database: str,
         logger: VerboseLogger,
     ) -> Dict[str, Any]:
-        try:
-            uri = f"neo4j://{host}:{port}"
-            driver = GraphDatabase.driver(uri, auth=(user, password))
+        uri = f"neo4j://{host}:{port}"
+        driver = GraphDatabase.driver(uri, auth=(user, password))
 
-            result = {
-                "type": "Neo4j",
-                "kind": "graph",
-                "version": None,
-                "databases": [],
-                "node_labels": [],
-                "relationship_types": [],
-            }
+        result = {
+            "type": "Neo4j",
+            "kind": "graph",
+            "version": None,
+            "databases": [],
+            "node_labels": [],
+            "relationship_types": [],
+        }
 
-            with driver.session(database=database) as session:
-                logger.info("Retrieving Neo4j version...")
-                version_query = session.run(
-                    "CALL dbms.components() YIELD versions RETURN versions[0] as version"
-                )
-                result["version"] = version_query.single()["version"]
+        with driver.session(database=database) as session:
+            logger.info("Retrieving Neo4j version...")
+            version_query = session.run(
+                "CALL dbms.components() YIELD versions RETURN versions[0] as version"
+            )
+            result["version"] = version_query.single()["version"]
 
-                logger.info("Retrieving database list...")
-                db_query = session.run("SHOW DATABASES")
-                result["databases"] = [record["name"] for record in db_query]
+            logger.info("Retrieving database list...")
+            db_query = session.run("SHOW DATABASES")
+            result["databases"] = [record["name"] for record in db_query]
 
-                logger.info("Retrieving node labels...")
-                label_query = session.run("CALL db.labels()")
-                result["node_labels"] = [record["label"] for record in label_query]
+            logger.info("Retrieving node labels...")
+            label_query = session.run("CALL db.labels()")
+            result["node_labels"] = [record["label"] for record in label_query]
 
-                logger.info("Retrieving relationship types...")
-                rel_query = session.run("CALL db.relationshipTypes()")
-                result["relationship_types"] = [
-                    record["relationshipType"] for record in rel_query
-                ]
+            logger.info("Retrieving relationship types...")
+            rel_query = session.run("CALL db.relationshipTypes()")
+            result["relationship_types"] = [
+                record["relationshipType"] for record in rel_query
+            ]
 
-            driver.close()
-            logger.info("Neo4j enumeration completed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error enumerating Neo4j: {str(e)}")
-            return {"error": str(e)}
+        driver.close()
+        logger.info("Neo4j enumeration completed successfully")
+        return result
 
 
 check_connection = Neo4jEnum.check_connection

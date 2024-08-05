@@ -39,40 +39,35 @@ class CouchDBEnum(DBInterface):
         database: str,
         logger: VerboseLogger,
     ) -> Dict[str, Any]:
-        try:
-            server = couchdb.Server(f"http://{user}:{password}@{host}:{port}/")
+        server = couchdb.Server(f"http://{user}:{password}@{host}:{port}/")
 
-            result = {
-                "type": "CouchDB",
-                "kind": "document",
-                "version": None,
-                "databases": [],
-                "database_info": [],
-            }
+        result = {
+            "type": "CouchDB",
+            "kind": "document",
+            "version": None,
+            "databases": [],
+            "database_info": [],
+        }
 
-            logger.info("Retrieving CouchDB version...")
-            result["version"] = server.version()
+        logger.info("Retrieving CouchDB version...")
+        result["version"] = server.version()
 
-            logger.info("Retrieving database list and information...")
-            for db_name in server:
-                result["databases"].append(db_name)
-                db = server[db_name]
-                db_info = db.info()
-                result["database_info"].append(
-                    {
-                        "name": db_name,
-                        "doc_count": db_info.get("doc_count"),
-                        "disk_size": db_info.get("disk_size"),
-                        "update_seq": db_info.get("update_seq"),
-                    }
-                )
+        logger.info("Retrieving database list and information...")
+        for db_name in server:
+            result["databases"].append(db_name)
+            db = server[db_name]
+            db_info = db.info()
+            result["database_info"].append(
+                {
+                    "name": db_name,
+                    "doc_count": db_info.get("doc_count"),
+                    "disk_size": db_info.get("disk_size"),
+                    "update_seq": db_info.get("update_seq"),
+                }
+            )
 
-            logger.info("CouchDB enumeration completed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(f"Error enumerating CouchDB: {str(e)}")
-            return {"error": str(e)}
+        logger.info("CouchDB enumeration completed successfully")
+        return result
 
 
 check_connection = CouchDBEnum.check_connection
