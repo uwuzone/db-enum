@@ -55,8 +55,8 @@ class MSSQLEnum(DBInterface):
         }
 
         logger.info("Retrieving MSSQL version...")
-        cursor.execute("SELECT @@VERSION")
-        result["version"] = cursor.fetchone()[""]
+        cursor.execute("SELECT @@VERSION AS version")
+        result["version"] = cursor.fetchone()["version"]
 
         logger.info("Retrieving database list...")
         cursor.execute("SELECT name FROM sys.databases")

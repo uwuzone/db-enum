@@ -17,6 +17,7 @@ dependencies = [
     "neo4j>=5.23.1",
     "couchdb>=1.2",
     "influxdb>=5.3.2",
+    "cryptography>=43.0.0",
 ]
 requires-python = ">=3.12"
 readme = "README.md"

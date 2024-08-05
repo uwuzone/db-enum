@@ -74,7 +74,7 @@ def check_connection_with_timeout(
 @click.option("--verbose", is_flag=True, help="Enable verbose output")
 @click.option(
     "--global-timeout",
-    default=30,
+    default=60,
     help="Global timeout for the entire command execution in seconds",
 )
 @click.pass_context
@@ -91,7 +91,7 @@ def cli(ctx, verbose, global_timeout):
 @click.option("--user", required=True, help="Database user")
 @click.option("--password", required=True, help="Database password")
 @click.option("--database", help="Database name")
-@click.option("--timeout", default=5, help="Connection timeout in seconds")
+@click.option("--timeout", default=15, help="Connection timeout in seconds")
 @click.pass_context
 def magic(
     ctx, host: str, port: int, user: str, password: str, database: str, timeout: int
@@ -99,10 +99,14 @@ def magic(
     """Automatically detect and enumerate the database type."""
     logger = ctx.obj["logger"]
     global_timeout = ctx.obj["global_timeout"]
+    logger.info(
+        f"Auto-detecting database type, {timeout}s limit per detection. This can take a while..."
+    )
 
     try:
         with fail_on_timeout(global_timeout):
             for db_type in DB_TYPES:
+                logger.info(f"Trying to connect with {db_type} client...")
                 module = importlib.import_module(f"db_enum.db.{db_type}")
                 if check_connection_with_timeout(
                     module, host, port, user, password, database, logger, timeout
@@ -133,7 +137,7 @@ for db_type in DB_TYPES:
     @click.option("--user", required=True, help="Database user")
     @click.option("--password", required=True, help="Database password")
     @click.option("--database", help="Database name")
-    @click.option("--timeout", default=5, help="Connection timeout in seconds")
+    @click.option("--timeout", default=15, help="Connection timeout in seconds")
     @click.pass_context
     def db_command(
         ctx,

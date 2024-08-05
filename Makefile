@@ -1,15 +1,37 @@
-.PHONY: test
+.PHONY: test test-mysql test-postgres test-mssql test-mongodb test-redis test-elasticsearch test-neo4j test-couchdb test-influxdb test-cassandra
 
-test:
-	# @echo "Waiting for databases to be ready..."
-	# @sleep 30
-	@pdm db-enum mysql --host localhost --port 3306 --user root --password rootpassword --database testdb && echo 'mysql ok' || echo 'mysql failed'
-	@pdm db-enum postgres --host localhost --port 5432 --user postgres --password rootpassword --database testdb && echo 'postgres ok' || echo 'postgres failed'
-	@pdm db-enum mssql --host localhost --port 1433 --user sa --password "YourStrong!Passw0rd" --database master && echo 'mssql ok' || echo 'mssql failed'
-	@pdm db-enum mongodb --host localhost --port 27017 --user root --password rootpassword --database admin && echo 'mongodb ok' || echo 'mongodb failed'
-	@pdm db-enum redis --host localhost --port 6379 --user default --password "" --database 0 && echo 'redis ok' || echo 'redis failed'
-	@pdm db-enum elasticsearch --host localhost --port 9200 --user elastic --password changeme --database default && echo 'elasticsearch ok' || echo 'elasticsearch failed'
-	@pdm db-enum cassandra --host localhost --port 9042 --user cassandra --password cassandra --database system  && echo 'cassandra ok' || echo 'cassandra failed'
-	@pdm db-enum neo4j --host localhost --port 7687 --user neo4j --password testpassword --database neo4j && echo 'neo4j ok' || echo 'neo4j failed'
-	@pdm db-enum couchdb --host localhost --port 5984 --user admin --password password --database _users && echo 'couchdb ok' || echo 'couchdb failed'
-	@pdm db-enum influxdb --host localhost --port 8086 --user admin --password password --database testdb && echo 'influxdb ok' || echo 'influxdb failed' && echo 'influxdb ok' || echo 'influxdb failed'
+define db_test
+pdm db-enum --verbose $(1) --host localhost --port $(2) --user $(3) --password $(4) --database $(5) >/dev/null && echo '$(1) ok' || echo '$(1) failed'
+endef
+
+test-mysql:
+	$(call db_test,mysql,3306,root,rootpassword,testdb)
+
+test-postgres:
+	$(call db_test,postgres,5432,postgres,rootpassword,testdb)
+
+test-mssql:
+	$(call db_test,mssql,1433,sa,"YourStrong!Passw0rd",master)
+
+test-mongodb:
+	$(call db_test,mongodb,27017,root,rootpassword,admin)
+
+test-redis:
+	$(call db_test,redis,6379,default,"",0)
+
+test-elasticsearch:
+	$(call db_test,elasticsearch,9200,elastic,changeme,default)
+
+test-neo4j:
+	$(call db_test,neo4j,7687,neo4j,testpassword,neo4j)
+
+test-couchdb:
+	$(call db_test,couchdb,5984,admin,password,_users)
+
+test-influxdb:
+	$(call db_test,influxdb,8086,admin,password,testdb)
+
+test-cassandra:
+	$(call db_test,cassandra,9042,cassandra,cassandra,system)
+
+test: test-mysql test-postgres test-mssql test-mongodb test-redis test-elasticsearch test-neo4j test-couchdb test-influxdb test-cassandra

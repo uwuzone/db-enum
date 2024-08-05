@@ -27,8 +27,9 @@ services:
       - '1433:1433'
 
   mongodb:
-    image: mongo:latest
-    platform: linux/amd64
+    # any recent mongo (5+) requires AVX. Should be fine...
+    image: mongo:4.4.18
+    # platform: linux/amd64
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
@@ -63,7 +64,8 @@ services:
       - '7687:7687'
 
   couchdb:
-    image: couchdb:3
+    # XXX segfault running 3.3.3
+    image: couchdb:3.1
     platform: linux/amd64
     environment:
       COUCHDB_USER: admin

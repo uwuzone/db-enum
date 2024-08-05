@@ -1,10 +1,8 @@
 import psycopg2
 from psycopg2.extras import DictCursor
 from typing import Dict, Any
-
-from db_enum.logger import VerboseLogger
-
 from ..db_interface import DBInterface
+from ..logger import VerboseLogger
 
 
 class PostgresEnum(DBInterface):
@@ -48,53 +46,65 @@ class PostgresEnum(DBInterface):
         database: str,
         logger: VerboseLogger,
     ) -> Dict[str, Any]:
-        conn = psycopg2.connect(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            dbname=database or "postgres",
-        )
-        cursor = conn.cursor(cursor_factory=DictCursor)
-
-        result = {
-            "type": "PostgreSQL",
-            "kind": "sql",
-            "version": None,
-            "databases": [],
-            "tables": [],
-        }
-
-        logger.info("Retrieving PostgreSQL version...")
-        cursor.execute("SELECT version()")
-        result["version"] = cursor.fetchone()[0]
-
-        logger.info("Retrieving database list...")
-        cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false")
-        result["databases"] = [row[0] for row in cursor.fetchall()]
-
-        logger.info("Retrieving table information...")
-        cursor.execute(
-            """
-            SELECT schemaname, tablename, n_live_tup, pg_total_relation_size('"' || schemaname || '"."' || tablename || '"') as total_bytes
-            FROM pg_stat_user_tables
-        """
-        )
-        for row in cursor.fetchall():
-            result["tables"].append(
-                {
-                    "schema": row["schemaname"],
-                    "name": row["tablename"],
-                    "approx_rows": row["n_live_tup"],
-                    "size_bytes": row["total_bytes"],
-                }
+        try:
+            conn = psycopg2.connect(
+                host=host,
+                port=port,
+                user=user,
+                password=password,
+                dbname=database or "postgres",
             )
+            cursor = conn.cursor(cursor_factory=DictCursor)
 
-        cursor.close()
-        conn.close()
+            result = {
+                "type": "PostgreSQL",
+                "kind": "sql",
+                "version": None,
+                "databases": [],
+                "tables": [],
+            }
 
-        logger.info("PostgreSQL enumeration completed successfully")
-        return result
+            logger.info("Retrieving PostgreSQL version...")
+            cursor.execute("SELECT version()")
+            result["version"] = cursor.fetchone()[0]
+
+            logger.info("Retrieving database list...")
+            cursor.execute(
+                "SELECT datname FROM pg_database WHERE datistemplate = false"
+            )
+            result["databases"] = [row[0] for row in cursor.fetchall()]
+
+            logger.info("Retrieving table information...")
+            cursor.execute(
+                """
+                SELECT 
+                    schemaname, 
+                    relname AS tablename, 
+                    n_live_tup::bigint AS n_live_tup, 
+                    pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(relname))::bigint AS total_bytes
+                FROM pg_stat_user_tables
+                ORDER BY total_bytes DESC
+            """
+            )
+            for row in cursor.fetchall():
+                result["tables"].append(
+                    {
+                        "schema": row["schemaname"],
+                        "name": row["tablename"],
+                        "approx_rows": row["n_live_tup"],
+                        "size_bytes": row["total_bytes"],
+                    }
+                )
+
+            cursor.close()
+            conn.close()
+
+            logger.info("PostgreSQL enumeration completed successfully")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error enumerating PostgreSQL: {str(e)}")
+            return {"error": str(e)}
 
 
 check_connection = PostgresEnum.check_connection
