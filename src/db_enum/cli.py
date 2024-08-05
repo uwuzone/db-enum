@@ -88,8 +88,8 @@ def cli(ctx, verbose, global_timeout):
 @cli.command()
 @click.option("--host", required=True, help="Database host")
 @click.option("--port", required=True, type=int, help="Database port")
-@click.option("--user", required=True, help="Database user")
-@click.option("--password", required=True, help="Database password")
+@click.option("--user", required=False, help="Database user")
+@click.option("--password", required=False, help="Database password")
 @click.option("--database", help="Database name")
 @click.option("--timeout", default=15, help="Connection timeout in seconds")
 @click.pass_context
@@ -134,8 +134,8 @@ for db_type in DB_TYPES:
     @cli.command(name=db_type)
     @click.option("--host", required=True, help="Database host")
     @click.option("--port", required=True, type=int, help="Database port")
-    @click.option("--user", required=True, help="Database user")
-    @click.option("--password", required=True, help="Database password")
+    @click.option("--user", required=False, help="Database user")
+    @click.option("--password", required=False, help="Database password")
     @click.option("--database", help="Database name")
     @click.option("--timeout", default=15, help="Connection timeout in seconds")
     @click.pass_context
